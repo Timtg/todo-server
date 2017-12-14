@@ -27,7 +27,9 @@ public class TodoService {
             throw new IllegalArgumentException("Cannot insert duplicate todo element");
         }
         Long todoId = todoDao.insertTodoElement(todoElement);
-        todoDao.insertCategoryLink(todoId, todoElement.getCategories());
+        if (todoElement.getCategories() != null) {
+            todoDao.insertCategoryLink(todoId, todoElement.getCategories());
+        }
     }
 
     private boolean checkForDuplicateTodoElements(TodoElement todoElement) {

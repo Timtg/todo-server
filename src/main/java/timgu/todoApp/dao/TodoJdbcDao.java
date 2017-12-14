@@ -58,11 +58,16 @@ public class TodoJdbcDao implements TodoDao {
     public boolean getDuplicateTodoElements(TodoElement todoElement) {
 
         StringJoiner joiner = new StringJoiner(",", "(", ")");
-        todoElement.getCategories().forEach(category -> joiner.add("" + category.getCategoryId()));
+        String categorySql = "";
+        if(todoElement.getCategories() != null && !todoElement.getCategories().isEmpty()) {
+            todoElement.getCategories().forEach(category -> joiner.add("" + category.getCategoryId()));
+            categorySql = " and category_id in " + joiner.toString();
+        }
         String sql = "SELECT count (tb.id) as count " +
                 "FROM todo_body tb, todo_element_category tc, category c where tb.body =" +
-                " ? AND tb.id = tc.todo_element_id and tc.category_id = c.id and category_id in ?";
-        return template.queryForObject(sql, (rs, rowNum) -> rs.getLong("count"), todoElement.getBody(), joiner.toString()) > 0;
+                " ? AND tb.id = tc.todo_element_id and tc.category_id = c.id" + categorySql;
+
+        return template.queryForObject(sql, (rs, rowNum) -> rs.getLong("count"), todoElement.getBody()) > 0;
 
     }
 
@@ -70,7 +75,7 @@ public class TodoJdbcDao implements TodoDao {
     public Long insertTodoElement(TodoElement todoElement) {
         Map<String, Object> insertParams = new HashMap<>();
         insertParams.put("body", todoElement.getBody());
-        insertParams.put("order_time", Timestamp.valueOf(todoElement.getCreatedTime()));
+        insertParams.put("Created_date", Timestamp.valueOf(LocalDateTime.now()));
         insertParams.put("deleted", false);
 
         return todoInsertActor.executeAndReturnKey(insertParams).longValue();
